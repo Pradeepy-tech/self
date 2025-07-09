@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mood Trends</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>AI-Powered Mental Health Support</h1>
+  <p>Your safe space to talk, heal, and grow.</p>
+</header>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header text-center">
+                    <h3>Your Mood Trends</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="moodChart"></canvas>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <a href="moodtracker.html" class="btn btn-primary">Back to Mood Tracker</a>
+                <a href="index.html" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center mt-5 mb-3 text-muted">
+    © 2025 MentalHealth.ai | <a href="contact.html" class="text-muted">Contact & Help</a> | Privacy & Security Guaranteed
+</footer>
+
+<script>
+    const USER_ID = 1; // Hardcoded for now
+
+    fetch(`/get-moods/${USER_ID}`)
+      .then(response => response.json())
+      .then(moodData => {
+        const labels = moodData.map(entry => entry.date);
+        const moodScores = moodData.map(entry => {
+          switch (entry.mood) {
+            case "😊 Happy": return 5;
+            case "😐 Neutral": return 3;
+            case "😔 Sad": return 2;
+            case "😰 Anxious": return 1;
+            case "😡 Angry": return 1;
+            default: return 0;
+          }
+        });
+
+        new Chart(document.getElementById('moodChart'), {
+          type: 'line',
+          data: {
+            labels: labels.reverse(),
+            datasets: [{
+              label: 'Mood Level (5=Happy)',
+              data: moodScores.reverse(),
+              borderColor: '#4e7cff',
+              backgroundColor: 'rgba(78, 124, 255, 0.1)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            scales: {
+              y: { min: 0, max: 5, ticks: { stepSize: 1 } }
+            },
+            responsive: true,
+            maintainAspectRatio: true
+          }
+        });
+      })
+      .catch(error => {
+          console.error('Error fetching mood data:', error);
+          const chartCanvas = document.getElementById('moodChart');
+          const ctx = chartCanvas.getContext('2d');
+          ctx.font = '16px Segoe UI';
+          ctx.fillStyle = 'red';
+          ctx.textAlign = 'center';
+          ctx.fillText('Could not load mood chart.', chartCanvas.width / 2, chartCanvas.height / 2);
+      });
+</script>
+</body>
+</html>

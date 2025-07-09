@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mood Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>AI-Powered Mental Health Support</h1>
+  <p>Your safe space to talk, heal, and grow.</p>
+</header>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header text-center"><h3>Track Your Mood</h3></div>
+        <div class="card-body">
+          <form id="moodForm">
+            <div class="mb-3">
+              <label for="mood" class="form-label">How are you feeling today?</label>
+              <select class="form-select" id="mood" required>
+                <option value="">Select mood</option>
+                <option>😊 Happy</option>
+                <option>😔 Sad</option>
+                <option>😡 Angry</option>
+                <option>😰 Anxious</option>
+                <option>😐 Neutral</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="note" class="form-label">Any notes (optional):</label>
+              <textarea class="form-control" id="note" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Save Entry</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-header text-center"><h3>Mood History</h3></div>
+        <div class="card-body">
+          <ul class="list-group" id="moodList">
+            <!-- Mood history will be loaded here -->
+          </ul>
+        </div>
+        <div class="card-footer text-center">
+            <a href="moodchart.html" class="btn btn-primary">View Mood Chart</a>
+        </div>
+      </div>
+       <div class="text-center mt-3">
+            <a href="index.html" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+  </div>
+</div>
+
+<footer class="text-center mt-5 mb-3 text-muted">
+    © 2025 MentalHealth.ai | <a href="contact.html" class="text-muted">Contact & Help</a> | Privacy & Security Guaranteed
+</footer>
+
+<script>
+  const form = document.getElementById("moodForm");
+  const list = document.getElementById("moodList");
+  const USER_ID = 1; // Hardcoded for now, should be dynamic after login
+
+  function fetchAndRenderMoods() {
+    fetch(`/get-moods/${USER_ID}`)
+      .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(moods => {
+        list.innerHTML = "";
+        if (moods.length === 0) {
+          list.innerHTML = '<li class="list-group-item">No mood entries yet.</li>';
+          return;
+        }
+        moods.forEach(entry => {
+          const item = document.createElement('li');
+          item.className = 'list-group-item';
+          item.textContent = `${entry.date} - ${entry.mood} (${entry.note || "No note"})`;
+          list.appendChild(item);
+        });
+      })
+      .catch(error => {
+          console.error('There has been a problem with your fetch operation:', error);
+          list.innerHTML = '<li class="list-group-item text-danger">Could not load mood history. Please ensure the backend server is running.</li>';
+      });
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const mood = document.getElementById("mood").value;
+    const note = document.getElementById("note").value;
+    
+    fetch('/save-mood', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: USER_ID,
+        mood: mood,
+        note: note,
+        date: new Date().toLocaleDateString()
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.status === 'mood saved') {
+        form.reset();
+        fetchAndRenderMoods(); // Refresh the list
+      }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to save mood. Is the server running?');
+    });
+  });
+
+  // Initial load
+  fetchAndRenderMoods();
+</script>
+</body>
+</html>

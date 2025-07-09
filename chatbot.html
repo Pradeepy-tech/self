@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Mental Health Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>AI-Powered Mental Health Support</h1>
+  <p>Your safe space to talk, heal, and grow.</p>
+</header>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header text-center">
+                    <h3>Talk to Your AI Friend 💬</h3>
+                </div>
+                <div class="card-body chat-box" id="chat">
+                    <!-- Chat messages will appear here -->
+                    <div class="bot-msg"><strong>Bot:</strong> Hello! How are you feeling today?</div>
+                </div>
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input type="text" id="userInput" class="form-control" placeholder="Type your thoughts..." onkeyup="if(event.keyCode === 13) sendMessage()">
+                        <button onclick="sendMessage()" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <a href="index.html" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center mt-5 mb-3 text-muted">
+    © 2025 MentalHealth.ai | <a href="contact.html" class="text-muted">Contact & Help</a> | Privacy & Security Guaranteed
+</footer>
+
+<script>
+  const chat = document.getElementById("chat");
+  const userInput = document.getElementById("userInput");
+
+  function sendMessage() {
+    const userText = userInput.value;
+    if (userText.trim() === "") return;
+
+    appendMessage('You', userText);
+    userInput.value = "";
+    
+    fetch('/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: userText }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        appendMessage('Bot', data.reply);
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        appendMessage('Bot', 'Sorry, I am having trouble connecting. Please try again later.');
+    });
+  }
+
+  function appendMessage(sender, message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add(sender.toLowerCase() + '-msg');
+    // Sanitize message to prevent HTML injection
+    const cleanMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    messageDiv.innerHTML = `<strong>${sender}:</strong> ${cleanMessage}`;
+    chat.appendChild(messageDiv);
+    chat.scrollTop = chat.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
